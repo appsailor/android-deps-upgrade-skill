@@ -1,4 +1,4 @@
-# android-deps-upgrade — Claude Code Skill
+# android-deps-upgrade — Claude Code Skill `v1.2.0`
 
 A [Claude Code](https://claude.ai/code) skill that upgrades all Android Gradle dependencies to their latest stable versions across every module, then commits and pushes.
 
@@ -43,7 +43,7 @@ Dependency                                  Current      Latest       Action
 ------------------------------------------  -----------  -----------  -------
 com.android.application (AGP)               9.1.0        9.2.0        UPGRADE
 org.gradle (wrapper)                        9.3.1        9.4.1        UPGRADE
-androidx.compose:compose-bom                2026.03.01   2026.05.00   UPGRADE
+androidx.compose:compose-bom                2026.05.00   2026.05.01   UPGRADE
 kotlinx-serialization-json                  1.10.0       1.11.0       UPGRADE
 com.google.firebase:firebase-bom            34.14.0      34.14.0      OK
 com.google.firebase:firebase-analytics-ktx  (BOM)        —            MIGRATE → firebase-analytics
@@ -54,6 +54,19 @@ io.coil-kt:coil-compose                     2.7.0        3.4.0        MAJOR — 
 
 - [Claude Code](https://claude.ai/code)
 - Android project using Kotlin DSL (`build.gradle.kts`)
+
+## Changelog
+
+### v1.2.0
+- Key sources (Compose BOM, AGP, AndroidX stable channel, Kotlin, Firebase) now use **WebFetch** instead of WebSearch — prevents missing same-month patch releases like `2026.05.00 → 2026.05.01`
+- Added `version` field to skill frontmatter
+
+### v1.1.0
+- Firebase KTX migration: detects all `firebase-*-ktx` artifacts removed from the Firebase BOM at v34.0.0 (July 2025), renames them to their main-module equivalent, and updates Kotlin `*.ktx.*` import paths in source files
+- New **MIGRATE** action in the upgrade table
+
+### v1.0.0
+- Initial release
 
 ## License
 

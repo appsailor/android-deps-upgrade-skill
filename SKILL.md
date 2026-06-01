@@ -1,5 +1,6 @@
 ---
 name: android-deps-upgrade
+version: 1.2.0
 description: "Upgrade all Android Gradle dependencies to latest stable versions across every module, then commit and push"
 argument-hint: "[--check-only]"
 allowed-tools:
@@ -66,15 +67,17 @@ Any `com.google.firebase:firebase-*-ktx` artifact is marked **MIGRATE** (not UPG
 
 Batch related lookups with parallel WebSearch/WebFetch calls. Use these authoritative sources:
 
+**Important:** Use **WebFetch** (not WebSearch) for the sources marked ⚡ below. Search engine results can lag by days and will silently miss same-month patch releases (e.g. `2026.05.00` → `2026.05.01`). WebFetch retrieves the live page.
+
 | Dependency group | Source |
 |---|---|
-| `com.android.application` / `com.android.library` (AGP) | `developer.android.com/build/releases/about-agp` — also check minimum Gradle version from the compatibility table |
+| `com.android.application` / `com.android.library` (AGP) | ⚡ WebFetch `developer.android.com/build/releases/about-agp` — also check minimum Gradle version from the compatibility table |
 | Gradle wrapper | check the compatibility table on the AGP page above |
-| `org.jetbrains.kotlin.*` | `kotlinlang.org/docs/releases.html` |
-| `com.google.devtools.ksp` | `github.com/google/ksp/releases` |
-| `androidx.*` (all AndroidX) | `developer.android.com/jetpack/androidx/versions/stable-channel` |
-| `androidx.compose:compose-bom` | `developer.android.com/develop/ui/compose/bom/bom-mapping` |
-| `com.google.firebase:firebase-bom` | `firebase.google.com/support/release-notes/android` |
+| `org.jetbrains.kotlin.*` | ⚡ WebFetch `kotlinlang.org/docs/releases.html` |
+| `com.google.devtools.ksp` | ⚡ WebFetch `github.com/google/ksp/releases` |
+| `androidx.*` (all AndroidX) | ⚡ WebFetch `developer.android.com/jetpack/androidx/versions/stable-channel` — search results may be stale |
+| `androidx.compose:compose-bom` | ⚡ WebFetch `developer.android.com/develop/ui/compose/bom/bom-mapping` — find the **highest** version listed, including patch releases like `YYYY.MM.01`. Never rely on search for this. |
+| `com.google.firebase:firebase-bom` | ⚡ WebFetch `firebase.google.com/support/release-notes/android` |
 | `com.google.firebase:*` (explicit, non-ktx) | same Firebase release notes page |
 | `com.google.firebase:firebase-*-ktx` | **MIGRATE** — do not look up version; these were removed from the BOM at v34.0.0. Drop `-ktx` suffix: `firebase-analytics-ktx` → `firebase-analytics`, `firebase-firestore-ktx` → `firebase-firestore`, etc. If the module doesn't declare the Firebase BOM yet, add it. Then update Kotlin imports (see Step 6). |
 | `com.google.android.gms:*` | `developers.google.com/android/guides/releases` |
