@@ -53,6 +53,15 @@ grep -rh 'implementation\|ksp\|testImplementation\|androidTestImplementation\|de
 
 Also read `gradle-wrapper.properties` to get the current Gradle distribution version.
 
+**Firebase KTX detection — run separately:**
+
+```bash
+grep -rn 'firebase-.*-ktx\|firebase-ktx\|firebase.ktx.Firebase\|firebase\..*\.ktx\.' \
+  <android_root> --include="*.kts" --include="*.kt" | grep -v "/build/"
+```
+
+Any `com.google.firebase:firebase-*-ktx` artifact is marked **MIGRATE** (not UPGRADE) — see Step 6 for the migration procedure. Firebase removed all `-ktx` modules from the BOM starting with v34.0.0 (July 2025). The Kotlin APIs were merged into the main modules.
+
 ## Step 4 — Look up latest stable versions
 
 Batch related lookups with parallel WebSearch/WebFetch calls. Use these authoritative sources:
@@ -66,7 +75,8 @@ Batch related lookups with parallel WebSearch/WebFetch calls. Use these authorit
 | `androidx.*` (all AndroidX) | `developer.android.com/jetpack/androidx/versions/stable-channel` |
 | `androidx.compose:compose-bom` | `developer.android.com/develop/ui/compose/bom/bom-mapping` |
 | `com.google.firebase:firebase-bom` | `firebase.google.com/support/release-notes/android` |
-| `com.google.firebase:*` (explicit) | same Firebase release notes page |
+| `com.google.firebase:*` (explicit, non-ktx) | same Firebase release notes page |
+| `com.google.firebase:firebase-*-ktx` | **MIGRATE** — do not look up version; these were removed from the BOM at v34.0.0. Drop `-ktx` suffix: `firebase-analytics-ktx` → `firebase-analytics`, `firebase-firestore-ktx` → `firebase-firestore`, etc. If the module doesn't declare the Firebase BOM yet, add it. Then update Kotlin imports (see Step 6). |
 | `com.google.android.gms:*` | `developers.google.com/android/guides/releases` |
 | `com.google.gms:google-services` | `developers.google.com/android/guides/google-services-plugin` |
 | `org.jetbrains.kotlinx:kotlinx-serialization-*` | `github.com/Kotlin/kotlinx.serialization/releases` |
@@ -86,9 +96,13 @@ com.android.application (AGP)               9.2.0         9.3.0         UPGRADE
 org.gradle (wrapper)                        9.4.1         9.5.0         UPGRADE
 androidx.compose:compose-bom               2026.05.00    2026.06.00    UPGRADE
 com.google.firebase:firebase-bom            34.14.0       34.14.0       OK
+com.google.firebase:firebase-analytics-ktx  (BOM)         —             MIGRATE → firebase-analytics (ktx removed in BOM 34.0.0)
+com.google.firebase:firebase-firestore-ktx  25.1.1        —             MIGRATE → firebase-firestore (ktx removed in BOM 34.0.0)
 io.coil-kt:coil-compose                    2.7.0         3.4.0         MAJOR — skip (artifact changed to io.coil-kt.coil3)
 ...
 ```
+
+Action legend: **OK** = already latest, **UPGRADE** = safe version bump, **MIGRATE** = artifact rename/restructure required, **MAJOR** = breaking change, skip and report.
 
 If `--check-only` is in `$ARGUMENTS`: print the table and stop here.
 
@@ -100,6 +114,16 @@ For each dependency marked UPGRADE:
 3. **AGP**: update both `com.android.application` and `com.android.library` version strings in the project-level build.gradle.kts in one pass
 4. **Gradle wrapper**: edit the `distributionUrl` line — always pair with AGP upgrade if AGP changed
 5. **BOMs**: update the version in every module that declares it explicitly
+
+For each dependency marked MIGRATE (Firebase KTX → main module):
+1. In the `build.gradle.kts` of the affected module:
+   - Replace `"com.google.firebase:firebase-FOO-ktx:X.Y.Z"` with `"com.google.firebase:firebase-FOO"` (no version — managed by BOM)
+   - If the module has no Firebase BOM `platform(...)` declaration, add one: `implementation(platform("com.google.firebase:firebase-bom:<current_bom_version>"))`
+2. In Kotlin source files in that module, update package imports:
+   - `import com.google.firebase.ktx.Firebase` → `import com.google.firebase.Firebase`
+   - `import com.google.firebase.FOO.ktx.bar` → `import com.google.firebase.FOO.bar`
+   - Run: `grep -rn "firebase.*\.ktx\." <module_src_dir> --include="*.kt"` to find all affected files
+3. Verify the module's source compiles after each migration before moving to the next
 
 ## Step 7 — Verify no old versions remain
 
