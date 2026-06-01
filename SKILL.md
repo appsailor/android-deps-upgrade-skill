@@ -1,6 +1,6 @@
 ---
 name: android-deps-upgrade
-version: 1.2.0
+version: 1.3.0
 description: "Upgrade all Android Gradle dependencies to latest stable versions across every module, then commit and push"
 argument-hint: "[--check-only]"
 allowed-tools:
